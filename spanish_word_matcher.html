@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Spanish Word Matching Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <audio id="correctSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_5c229eca90.mp3" preload="auto"></audio>
+  <audio id="wrongSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_59223ba245.mp3" preload="auto"></audio>
+  <style>
+    body {
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .dark-mode {
+      background-color: #121212 !important;
+      color: #f8f9fa !important;
+    }
+    .dark-mode .card {
+      background-color: rgba(30, 30, 30, 0.7);
+      color: #fff;
+      backdrop-filter: blur(10px);
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(200, 200, 200, 0.2);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+    .game-board {
+      max-width: 800px;
+      margin: auto;
+    }
+    .word-box {
+      cursor: grab;
+      padding: 8px 12px;
+      border-radius: 8px;
+      user-select: none;
+      transition: box-shadow 0.3s, transform 0.3s;
+      min-height: 44px;
+      min-width: 120px;
+      animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .word-box:hover {
+      transform: scale(1.02);
+    }
+    .correct { box-shadow: 0 0 10px 3px green; }
+    .wrong {
+      animation: shake 0.3s;
+      box-shadow: 0 0 10px 3px red;
+    }
+    .matched {
+      background-color: #d4edda !important;
+      color: #155724 !important;
+      border: 1px solid #c3e6cb;
+      cursor: default;
+    }
+    @keyframes shake {
+      10% { transform: translateX(-5px); }
+      20% { transform: translateX(5px); }
+      30% { transform: translateX(-5px); }
+      40% { transform: translateX(5px); }
+    }
+    .word-column {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      min-height: 300px;
+    }
+    #log {
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+      background: #f1f1f1;
+      border: 1px solid #ccc;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+    .dark-mode #log {
+      background-color: #1d1d1d;
+      color: #ccc;
+      border-color: #444;
+    }
+    @media (max-width: 576px) {
+      #scoreBarWrap {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        z-index: 999;
+        background: rgba(255,255,255,0.85);
+        padding: 6px;
+        border-radius: 8px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-light text-dark">
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">🧠 Spanish Matching Game</h2>
+    <button id="modeToggleBtn" class="btn btn-outline-dark btn-sm toggle-mode-btn" onclick="toggleDarkMode()">🌓 Toggle Mode</button>
+  </div>
+
+  <div class="card p-3 mb-4">
+    <div class="row align-items-end g-3">
+      <div class="col-md-6">
+        <label for="category" class="form-label">Choose a Category:</label>
+        <select class="form-select" id="category"></select>
+      </div>
+      <div class="col-md-6 d-grid">
+        <button class="btn btn-success" onclick="startGame()">🎮 Start Game</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-3 mb-4 game-board">
+    <div class="row">
+      <div class="col-md-6">
+        <h5 class="text-center">🇪🇸 Spanish</h5>
+        <div id="spanishColumn" class="word-column"></div>
+      </div>
+      <div class="col-md-6">
+        <h5 class="text-center">🇺🇸 English</h5>
+        <div id="englishColumn" class="word-column"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="scoreBarWrap" class="text-center mb-3">
+    <div id="score" class="fw-bold mb-2">Score: 0%</div>
+    <div class="progress mb-2" style="height: 20px;">
+      <div id="scoreBar" class="progress-bar bg-success" style="width: 0%">0%</div>
+    </div>
+    <button class="btn btn-outline-primary mt-2" onclick="startGame()">🔁 Play Again</button>
+    <button class="btn btn-outline-secondary ms-2 mt-2" onclick="toggleLog()">📝 Toggle Log</button>
+  </div>
+
+  <div id="log" class="d-none">🧾 Log:</div>
+</div>
+
+<script>
+  let fullDict = {};
+  let wordPairs = [], score = 0, attempts = 0;
+  const emojiMap = {
+    travel: "✈️", family: "👨‍👩‍👧‍👦", school: "🏫", office: "💼",
+    shopping: "🛍️", online: "💻", food: "🍔", animals: "🐶",
+    colors: "🎨", sports: "🏀", weather: "⛅", body: "🧍", home: "🏠"
+  };
+
+  const fallbackDict = {
+    travel: [["ticket", "boleto"], ["flight", "vuelo"], ["passport", "pasaporte"], ["hotel", "hotel"]],
+    family: [["father", "padre"], ["mother", "madre"], ["brother", "hermano"], ["sister", "hermana"]]
+  };
+
+  function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+    const btn = document.getElementById("modeToggleBtn");
+    btn.classList.toggle("btn-outline-dark");
+    btn.classList.toggle("btn-warning");
+  }
+
+  function toggleLog() {
+    document.getElementById("log").classList.toggle("d-none");
+  }
+
+  function log(msg) {
+    const logDiv = document.getElementById("log");
+    logDiv.innerText += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
+    logDiv.scrollTop = logDiv.scrollHeight;
+  }
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
+  async function loadJSON() {
+    try {
+      const res = await fetch("words.json");
+      fullDict = await res.json();
+      log("✅ Loaded words.json successfully.");
+    } catch {
+      fullDict = fallbackDict;
+      log("⚠️ Using fallback words.");
+    }
+
+    const dropdown = document.getElementById("category");
+    dropdown.innerHTML = '<option value="random">🎲 Random</option>';
+    Object.keys(fullDict).forEach(cat => {
+      const opt = document.createElement("option");
+      opt.value = cat;
+      opt.innerText = `${emojiMap[cat] || "📚"} ${cat.charAt(0).toUpperCase() + cat.slice(1)}`;
+      dropdown.appendChild(opt);
+    });
+  }
+
+  function updateScoreBar() {
+    const percent = attempts > 0 ? Math.floor((score / attempts) * 100) : 0;
+    document.getElementById("score").innerText = `Score: ${percent}%`;
+    const bar = document.getElementById("scoreBar");
+    bar.style.width = `${percent}%`;
+    bar.innerText = `${percent}%`;
+  }
+
+  function startGame() {
+    const cat = document.getElementById("category").value;
+    const categories = cat === "random" ? Object.keys(fullDict) : [cat];
+    const merged = categories.flatMap(c => fullDict[c]);
+    shuffle(merged);
+    wordPairs = merged.slice(0, 6).map(([eng, esp]) => ({ english: eng, spanish: esp }));
+    score = 0; attempts = 0;
+    document.getElementById("log").innerText = "🧾 Log:";
+    updateScoreBar();
+    loadRound();
+  }
+
+  function loadRound() {
+    const sCol = document.getElementById("spanishColumn");
+    const eCol = document.getElementById("englishColumn");
+    sCol.innerHTML = "";
+    eCol.innerHTML = "";
+
+    const spanish = [...wordPairs];
+    const english = [...wordPairs];
+    shuffle(spanish);
+    shuffle(english);
+
+    spanish.forEach(pair => {
+      const el = document.createElement("div");
+      el.className = "word-box btn btn-outline-secondary w-75 text-center";
+      el.innerText = pair.spanish;
+      el.setAttribute("draggable", true);
+      el.dataset.word = pair.english;
+      el.ondragstart = ev => {
+        ev.dataTransfer.setData("text/plain", pair.english);
+        log(`🧠 Dragging: ${pair.spanish}`);
+      };
+      sCol.appendChild(el);
+    });
+
+    english.forEach(pair => {
+      const el = document.createElement("div");
+      el.className = "word-box btn btn-outline-primary w-75 text-center";
+      el.innerText = pair.english;
+      el.dataset.target = pair.english;
+
+      el.ondragover = ev => ev.preventDefault();
+
+      el.ondrop = ev => {
+        ev.preventDefault();
+        const draggedEng = ev.dataTransfer.getData("text/plain");
+        attempts++;
+
+        if (draggedEng === pair.english) {
+          score++;
+          el.classList.add("matched");
+          el.innerHTML = `${pair.english} <span class="badge bg-success badge-check">✔️ Matched</span>`;
+          const spanishTile = document.querySelector(`[data-word="${draggedEng}"]`);
+          if (spanishTile) {
+            spanishTile.classList.add("matched");
+            spanishTile.innerHTML += ` <span class="badge bg-success badge-check">✔️</span>`;
+          }
+          confetti({ particleCount: 60, spread: 70, origin: { y: 0.5 } });
+          document.getElementById("correctSound").play();
+          log(`✅ Match: ${draggedEng} → ${pair.english}`);
+        } else {
+          el.classList.add("wrong");
+          document.getElementById("wrongSound").play();
+          setTimeout(() => el.classList.remove("wrong"), 500);
+          log(`❌ Wrong: ${draggedEng} ≠ ${pair.english}`);
+        }
+
+        updateScoreBar();
+      };
+
+      eCol.appendChild(el);
+    });
+  }
+
+  loadJSON();
+</script>
+</body>
+</html>
