@@ -29,12 +29,18 @@
       border: 1px solid rgba(200, 200, 200, 0.2);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> a7305b199c104c74263c311fd9fb82f7dc034b5d
     .game-board {
       max-width: 900px;
       margin: auto;
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> a7305b199c104c74263c311fd9fb82f7dc034b5d
     .word-box {
       cursor: grab;
       padding: 10px 14px;
@@ -98,7 +104,10 @@
       border-color: #444;
     }
 
+<<<<<<< HEAD
     /* 📱 Compact mobile mode */
+=======
+>>>>>>> a7305b199c104c74263c311fd9fb82f7dc034b5d
     @media (max-width: 768px) {
       .word-box {
         font-size: 0.85rem;
@@ -111,7 +120,10 @@
         gap: 8px;
         align-items: stretch;
       }
+<<<<<<< HEAD
 
+=======
+>>>>>>> a7305b199c104c74263c311fd9fb82f7dc034b5d
       .game-board .row {
         flex-wrap: nowrap;
         gap: 10px;
@@ -130,6 +142,7 @@
       <button id="modeToggleBtn" class="btn btn-outline-dark btn-sm toggle-mode-btn" onclick="toggleDarkMode()">🌓</button>
     </div>
 
+<<<<<<< HEAD
     <div class="card p-3 mb-4 game-board">
       <div class="row d-flex" id="gameRow">
         <div class="col-md-6">
@@ -140,9 +153,28 @@
           <h5 class="text-center">🇺🇸 English</h5>
           <div id="englishColumn" class="word-column"></div>
         </div>
+=======
+  <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-4">
+    <h2 class="mb-0">🧠 Luisa Learn - Word Matching Game 🧠</h2>
+    <select class="form-select w-auto" id="category"></select>
+    <button class="btn btn-success" onclick="startGame()">🎮 Start</button>
+    <button id="modeToggleBtn" class="btn btn-outline-dark btn-sm toggle-mode-btn" onclick="toggleDarkMode()">🌓</button>
+  </div>
+
+  <div class="card p-3 mb-4 game-board">
+    <div class="row d-flex" id="gameRow">
+      <div class="col-md-6">
+        <h5 class="text-center">🇪🇸 Spanish</h5>
+        <div id="spanishColumn" class="word-column"></div>
+      </div>
+      <div class="col-md-6">
+        <h5 class="text-center">🇺🇸 English</h5>
+        <div id="englishColumn" class="word-column"></div>
+>>>>>>> a7305b199c104c74263c311fd9fb82f7dc034b5d
       </div>
     </div>
 
+<<<<<<< HEAD
     <div id="scoreBarWrap" class="text-center mb-3">
       <div id="score" class="fw-bold mb-2">Score: 0%</div>
       <div class="progress mb-2" style="height: 20px;">
@@ -153,6 +185,18 @@
     </div>
 
     <div id="log" class="d-none">🧾 Log:</div>
+=======
+  <div id="scoreBarWrap" class="text-center mb-3">
+    <div id="score" class="fw-bold mb-2">Score: 0%</div>
+    <div class="progress mb-2" style="height: 20px;">
+      <div id="scoreBar" class="progress-bar bg-success" style="width: 0%">0%</div>
+    </div>
+    <button class="btn btn-outline-primary mt-2" onclick="startGame()">🔁 Play Again</button>
+    <button class="btn btn-outline-secondary ms-2 mt-2" onclick="toggleLog()">📝 Toggle Log</button>
+  </div>
+
+  <div id="log" class="d-none">🧾 Log:</div>
+>>>>>>> a7305b199c104c74263c311fd9fb82f7dc034b5d
 <script>
 let fullDict = {};
 let wordPairs = [], score = 0, attempts = 0, selectedSpanish = null;
@@ -195,11 +239,20 @@ async function loadJSON() {
     const res = await fetch("words.json");
     fullDict = await res.json();
     log("✅ Loaded words.json successfully.");
+<<<<<<< HEAD
   } catch {
     fullDict = {
       travel: [["ticket", "boleto"], ["flight", "vuelo"], ["passport", "pasaporte"], ["hotel", "hotel"]]
     };
     log("⚠️ Using fallback words.");
+=======
+  } catch (err) {
+    fullDict = {
+      travel: [["ticket", "boleto"], ["flight", "vuelo"], ["passport", "pasaporte"], ["hotel", "hotel"]],
+      family: [["father", "padre"], ["mother", "madre"], ["brother", "hermano"], ["sister", "hermana"]]
+    };
+    log("⚠️ Failed to load words.json. Using fallback.");
+>>>>>>> a7305b199c104c74263c311fd9fb82f7dc034b5d
   }
 
   const dropdown = document.getElementById("category");
@@ -239,7 +292,8 @@ function loadRound() {
   const eCol = document.getElementById("englishColumn");
   sCol.innerHTML = ""; eCol.innerHTML = "";
 
-  const spanish = [...wordPairs], english = [...wordPairs];
+  const spanish = [...wordPairs];
+  const english = [...wordPairs];
   shuffle(spanish); shuffle(english);
 
   spanish.forEach(pair => {
