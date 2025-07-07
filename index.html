@@ -279,6 +279,7 @@ function loadRound() {
 
 function attemptMatch(pair, el, draggedEng) {
   attempts++;
+  const spanishWord = wordPairs.find(p => p.english === draggedEng)?.spanish || "unknown";
   if (draggedEng === pair.english) {
     score++;
     el.classList.add("matched");
@@ -290,11 +291,11 @@ function attemptMatch(pair, el, draggedEng) {
       spanishTile.innerHTML += ` <span class="badge bg-success">✔️</span>`;
     }
     confetti({ particleCount: 60, spread: 70, origin: { y: 0.5 } });
-    log(`✅ Match: ${draggedEng} → ${pair.english}`);
+    log(`✅ Match: ${spanishWord} → ${pair.english}`);
   } else {
     el.classList.add("wrong");
     setTimeout(() => el.classList.remove("wrong"), 500);
-    log(`❌ Wrong: ${draggedEng} ≠ ${pair.english}`);
+    log(`❌ Wrong: ${spanishWord} → ${pair.english}`);
   }
   updateScoreBar();
 }
